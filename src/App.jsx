@@ -121,6 +121,24 @@ export default function MovieExplorer() {
     fetchMovies();
   }, [fetchMovies]);
 
+  // Client-side sort for search results (API doesn't support sort_by on /search/movie)
+  const sortMovies = (list) => {
+    if (!sortBy || !debouncedQuery.trim()) return list;
+    const [field, direction] = sortBy.split(".");
+    const asc = direction === "asc";
+    return [...list].sort((a, b) => {
+      const aVal = field === "release_date"
+        ? (a.release_date || "")
+        : (a.vote_average ?? 0);
+      const bVal = field === "release_date"
+        ? (b.release_date || "")
+        : (b.vote_average ?? 0);
+      if (aVal < bVal) return asc ? -1 : 1;
+      if (aVal > bVal) return asc ? 1 : -1;
+      return 0;
+    });
+  };
+
   const goToPrev = () => {
     if (page > 1) {
       setPage((p) => p - 1);
@@ -187,7 +205,7 @@ export default function MovieExplorer() {
                 </p>
               </div>
             ) : (
-              movies.map((movie) => <MovieCard key={movie.id} movie={movie} />)
+              sortMovies(movies).map((movie) => <MovieCard key={movie.id} movie={movie} />)
             )}
           </div>
         </main>
